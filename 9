@@ -1,0 +1,103 @@
+#include <stdio.h>
+
+void clearScreen() {
+    printf("\033[0d\033[2J");
+}
+
+void draw(int width, int height, int paddleSize, int ballX, int ballY, int paddleLeftY, int paddleRightY, int scoreLeft, int scoreRight) {
+    clearScreen();
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (x == 0 || x == width - 1) {
+                printf("*");
+            } else if (y == 0 || y == height - 1) {
+                printf("*");
+            } else if (x == 2 && y >= paddleLeftY && y < paddleLeftY + paddleSize) {
+                printf("|");
+            } else if (x == width - 3 && y >= paddleRightY && y < paddleRightY + paddleSize) {
+                printf("|");
+            } else if (x == ballX && y == ballY) {
+                printf("O");
+            } else {
+                printf(" ");
+            }
+        }
+        printf("\n");
+    }
+    printf("Score: %d - %d\n", scoreLeft, scoreRight);
+}
+
+void update(int width, int height, int paddleSize, int *ballX, int *ballY, int *ballDirX, int *ballDirY, int *paddleLeftY, int *paddleRightY, int *scoreLeft, int *scoreRight) {
+    *ballX += *ballDirX;
+    *ballY += *ballDirY;
+
+    if (*ballY <= 1 || *ballY >= height - 2) {
+        *ballDirY = -*ballDirY;
+    }
+
+    if (*ballX == 3 && *ballY >= *paddleLeftY && *ballY < *paddleLeftY + paddleSize) {
+        *ballDirX = -*ballDirX;
+    }
+
+    if (*ballX == width - 4 && *ballY >= *paddleRightY && *ballY < *paddleRightY + paddleSize) {
+        *ballDirX = -*ballDirX;
+    }
+
+    if (*ballX <= 0) {
+        (*scoreRight)++;
+        *ballX = width / 2;
+        *ballY = height / 2;
+        *ballDirX = 1;
+    }
+
+    if (*ballX >= width - 1) {
+        (*scoreLeft)++;
+        *ballX = width / 2;
+        *ballY = height / 2;
+        *ballDirX = -1;
+    }
+}
+
+void input(int height, int paddleSize, int *paddleLeftY, int *paddleRightY) {
+    char ch;
+    if (scanf(" %c", &ch) == 1) {
+        switch (ch) {
+            case 'a':
+                if (*paddleLeftY > 1) (*paddleLeftY)--;
+                break;
+            case 'z':
+                if (*paddleLeftY < height - paddleSize - 1) (*paddleLeftY)++;
+                break;
+            case 'k':
+                if (*paddleRightY > 1) (*paddleRightY)--;
+                break;
+            case 'm':
+                if (*paddleRightY < height - paddleSize - 1) (*paddleRightY)++;
+                break;
+        }
+    }
+}
+
+int main() {
+    int width = 80, height = 25, paddleSize = 3, winScore = 21;
+    int ballX = width / 2, ballY = height / 2;
+    int ballDirX = 1, ballDirY = 1;
+    int paddleLeftY = height / 2 - paddleSize / 2;
+    int paddleRightY = height / 2 - paddleSize / 2;
+    int scoreLeft = 0, scoreRight = 0;
+
+    while (scoreLeft < winScore && scoreRight < winScore) {
+        draw(width, height, paddleSize, ballX, ballY, paddleLeftY, paddleRightY, scoreLeft, scoreRight);
+        input(height, paddleSize, &paddleLeftY, &paddleRightY);
+        update(width, height, paddleSize, &ballX, &ballY, &ballDirX, &ballDirY, &paddleLeftY, &paddleRightY, &scoreLeft, &scoreRight);
+    }
+
+    clearScreen();
+    if (scoreLeft >= winScore) {
+        printf("Player 1 wins!\n");
+    } else {
+        printf("Player 2 wins!\n");
+    }
+
+    return 0;
+}
